@@ -1,0 +1,136 @@
+
+-- Founding member(s) can be determined through 
+--SELECT MIN(StartDate), CONCAT(A.FirstName, ' ', A.LastName) AS 'Founding Members'
+--FROM Memberships M 
+--JOIN Bands B ON M.BandID = B.BandID
+--JOIN Artists A ON M.ArtistID = A.ArtistID
+DROP TABLE IF EXISTS Bands;
+CREATE TABLE Bands (
+	BandID INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+	BandName NVARCHAR(MAX) NOT NULL,
+	FormationDate DATE NOT NULL,
+	FormationLocation NVARCHAR(MAX) NOT NULL
+);
+
+
+DROP TABLE IF EXISTS Artists;
+CREATE TABLE Artists (
+	ArtistID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	FirstName NVARCHAR(MAX) NOT NULL,
+	MiddleName NVARCHAR(MAX),
+	LastName NVARCHAR(MAX) NOT NULL,
+	StageFirstName NVARCHAR(MAX), 
+	StageLastName NVARCHAR(MAX), 
+	BirthDate DATE NOT NULL,
+);
+
+DROP TABLE IF EXISTS Memberships;
+CREATE TABLE Memberships (
+	MembershipID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	ArtistID INT NOT NULL,
+	BandID INT NOT NULL,
+	StartDate DATE,
+	EndDate DATE,
+	Role NVARCHAR(MAX),
+
+	FOREIGN KEY (ArtistID) REFERENCES Artists (ArtistID),
+	FOREIGN KEY (BandID) REFERENCES Bands (BandID)
+);
+
+DROP TABLE IF EXISTS Albums;
+CREATE TABLE Albums (
+	AlbumID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Title NVARCHAR(MAX) NOT NULL,
+	ReleaseDate DATE NOT NULL,
+	ArtistID INT,
+	BandID INT,
+
+	FOREIGN KEY (ArtistID) REFERENCES Artists (ArtistID),
+	FOREIGN KEY (BandID) REFERENCES Bands (BandID)
+);
+
+DROP TABLE IF EXISTS Songs;
+CREATE TABLE Songs (
+	SongID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Title NVARCHAR(MAX) NOT NULL,
+	Length TIME NOT NULL,
+	TrackNumber INT NOT NULL,
+	AlbumID INT NOT NULL,
+
+	FOREIGN KEY (AlbumID) REFERENCES Albums (AlbumID)
+);
+
+DROP TABLE IF EXISTS Credits;
+CREATE TABLE Credits (
+	CreditID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	IsWritingCredit BIT,
+	Part NVARCHAR(MAX),
+	ArtistID INT NOT NULL,
+	SongID INT NOT NULL,
+);
+
+
+DROP TABLE IF EXISTS Genres;
+CREATE TABLE Genres (
+	GenreID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Name NVARCHAR(MAX) NOT NULL,
+	Description NVARCHAR(MAX)
+);
+
+-- Not including Band or Artist Genre, as those can be derived from the genres of the albums they release
+DROP TABLE IF EXISTS AlbumGenres;
+CREATE TABLE AlbumGenres (
+	AlbumGenreID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	AlbumID INT NOT NULL,
+	GenreID INT NOT NULL,
+
+	FOREIGN KEY (AlbumID) REFERENCES Albums (AlbumID),
+	FOREIGN KEY (GenreID) REFERENCES Genres (GenreID)
+);
+
+
+DROP TABLE IF EXISTS Records;
+CREATE TABLE Records (
+	RecordID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	CatalogNumber NVARCHAR(MAX) NOT NULL,
+	PressingDate DATE NOT NULL,
+	PressingCountry NVARCHAR(MAX) NOT NULL,
+	RecordLabel NVARCHAR(MAX) NOT NULL,
+	AlbumID INT NOT NULL,
+
+	FOREIGN KEY (AlbumID) REFERENCES Albums (AlbumID)
+);
+
+
+DROP TABLE IF EXISTS Donors;
+CREATE TABLE Donors (
+	DonorID INT IDENTITY(1,1) NOT NULL PRIMARY KEY, 
+	FirstName NVARCHAR(MAX) NOT NULL,
+	LastName NVARCHAR(MAX) NOT NULL,
+	Relation NVARCHAR(MAX) NOT NULL
+);
+
+DROP TABLE IF EXISTS Sales;
+CREATE TABLE Sales (
+	SaleID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Price DECIMAL(5, 2),
+	DateOfSale DATE NOT NULL,
+	Location NVARCHAR(MAX),
+	WasGifted BIT,
+	DonorID INT,
+	RecordID INT NOT NULL,
+
+	FOREIGN KEY (DonorID) REFERENCES Donors (DonorID),
+	FOREIGN KEY (RecordID) REFERENCES Records (RecordID)
+);
+
+DROP TABLE IF EXISTS Spins;
+CREATE TABLE Spins (
+	SpinID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	SpinDate DATE,
+	RecordID INT NOT NULL,
+
+	FOREIGN KEY (RecordID) REFERENCES Records (RecordID)
+);
+
+ 

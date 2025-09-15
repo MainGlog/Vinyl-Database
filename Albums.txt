@@ -1,0 +1,134 @@
+'Calypso','1956-01-01'
+'Van Halen II','1979-03-23'
+'Fish Out of Water','1975-11-21'
+'Fragile','1971-11-26'
+'The Yes Album','1971-02-19'
+'Interview',1976
+'Hell Bent for Leather',1978
+'Paranoid',1970
+'The Myths and Legends of King Arthur',1975
+'Close to the Edge',1972
+'Tarkus',1971
+'Unleashed in the East',1979
+'Journey to the Centre of the Earth',1974
+'Fountains of Light',1977
+'Abbey Road',1969
+'A Question of Balance',1970
+'Tales from Topographic Oceans',1973
+'Selling England By The Pound',1973
+'One Fine Morning',1971
+'Three Friends',1972
+'Long Way to the Top',1980
+'Illusions on a Double Dimple',1974
+'Adventures in Utopia',1979
+'In Search of the Lost Chord',1968
+'The Six Wives of Henry VIII',1973
+'Attic Thoughts',1975
+'Emerson, Lake & Palmer',1970
+'Aqualung',1971
+'Olias of Sunhillow',1976
+'Screaming for Vengeance',1982
+'Scheherazade and Other Stories',1975
+'Defenders of the Faith',1984
+'Trilogy',1972
+'Days of Future Passed',1967
+'Thick as a Brick',1972
+'In the Court of the Crimson King',1969
+'The Dark Side of the Moon',1973
+'Yessongs',1973
+'Brain Salad Surgery',1973
+'Three of a Perfect Pair',1984
+'A Farewell to Kings',1977
+'Hemispheres',1978
+'Talking Book',1972
+'Sgt. Pepper\'s Lonely Hearts Club Band',1967
+'Old Loves Die Hard',1976
+'Tormato',1978
+'Thriller',1982
+'Magical Mystery Tour',1967
+'Free Hand',1975
+'Starless and Bible Black',1974
+'Time',1981
+'Vol 4',1972
+'The Lamb Lies Down on Broadway',1974
+'Gentle Giant', 1970
+'Rick Wakeman\'s Criminal Record',1977
+'No Earthly Connection',1976
+'Starcastle',1976
+'Spartacus',1975
+'Time and a Word',1970,
+'Going for the One',1977
+'Honky Chateu',1972
+'Pure Gold',1975
+'Crime of the Century',1974
+'Breakfast in America',1979
+'Goodbye',1969
+'Discovery',1979
+'Foxtrot',1972
+'The Power and the Glory',1974
+'If',1970
+'If 2',1970
+'If 3',1971
+'Please Don\'t Touch!',1978
+'Led Zepplin [IV]',1971
+'Purple Rain',1984
+'Goodbye Yellow Brick Road',1973
+'I Got Dem Ol\' Kozmic Blues Again Mama!',1969
+'Star Wars Soundtrack',1977
+'Superman: The Movie Soundtrack',1978
+'Carnival',1978
+'Relayer',1974
+'Yes',1969
+'Diary of a Madman',1981
+'Animals',1977
+'Drama',1980
+'Black Sabbath',1970,
+'Sabbath Bloody Sabbath',1973
+'Machine Head',1972
+'Out of the Blue',1977
+'Nursery Cryme',1971
+'Octopus',1972
+'Lizard',1970
+'Discipline',1981
+'Led Zepplin',1969
+'Songs in the Key of Life',1976
+'Innervisions',1973
+'Van Halen',1978
+'Fantasia',1982
+'An Hysteric Return at Carnegie Hall',1967
+'On the Waters',1970
+'Sounds of Silence',1966
+'Acting Very Strange',1982
+'Ot \'N\' Sweaty',1972
+'One of a Kind',1979
+'Remain In Light',1980
+'Bookends',1968
+'Sin After Sin',1977,
+'Permanent Waves',1980
+'The Stranger',1977
+'After The Gold Rush',1970
+'On Stage',1977
+'Accept No Substitute'
+'Deep Purple In Rock',1970
+'In the Wake of Poseidon',1970
+'Killing Is My Business... And Business Is Good!',1985
+'Santana',1969
+'The Hobbit',1977
+'Fly by Night',1975
+'Walt Disney\'s Fantasia',1957
+'Heaven and Hell',1980
+'Stained Class',1978
+'The Number of the Beast',1982
+'Invincible Shield',2024
+'Live',1974
+'A New World Record',1976
+'Speaking in Tongues',1983
+'Master of Reality',1971,
+'The Inner Mounting Flame',1971
+'Elegant Gypsy',1977
+'Birds of Fire',1973
+'Visions of the Emerald Beyond',1975
+'Meddle',1971
+'Rising',1976
+'1967-1970 [Blue Album]',1973
+'Raiders of the Lost Ark',1981
