@@ -45,7 +45,7 @@ class DataModel:
         
 
 
-        print(table_name + " contains " + str(len(results)) + " entries")
+        # print(table_name + " contains " + str(len(results)) + " entries")
 
     def fetch_data(self):
         table_names = [
@@ -70,43 +70,23 @@ def get_id_from_name(table_name, field_name, value):
     """
     cursor = conn.cursor()
     cursor.execute(query)
-    return cursor.fetchall()
-
-async def get_release_year(album_title, artist):
-    token = "cdAtNuyJOYKXpIWZggHbodcQoqorFbElvGGXKYew"
-    url = f"https://api.discogs.com/database/search?artist={artist.replace(" ", "+")}&format=Vinyl&release_title={album_title.replace(" ", "+")}&token={token}"
-
-    print(f"Fetching Release Year for {album_title} by {artist}...")
-
-    data = await fetch_from_discogs(url)
-    
-    try:
-        master_url = data["results"][0]["master_url"]
-        data = await fetch_from_discogs(master_url)
-    except Exception as e:
-        print("No Master URL Present")
-        return "Error"
-
-    try: 
-        year = data["year"]
-        if len(str(year)) <= 4:
-            year = f"'{year}-01-01'"
-        print(f"Release Year: {year}")
-        return year
-    except Exception as e:
-        print("An Error Occurred While Attempting to Access API Data: ", e)
-        return "Error"
-    
+    return cursor.fetchone()
 
 
 async def fetch_from_discogs(url):
     async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status != 200:
-                print("Error occurred")
-                return
-            sleep(3)
-            return await response.json()
+        try:
+            async with await session.get(url) as response:
+                if response.status != 200:
+                    print(f"Got status code {response.status} from {url}")
+                    await asyncio.sleep(2.5)  # Use asyncio.sleep instead of time.sleep in async functions
+                    return None
+                # 2 second request limit
+                await asyncio.sleep(2.5)  
+                return await response.json()
+        except aiohttp.ClientError as e:
+            print(f"Network error while fetching {url}: {e}")
+            return None
 
 
 def fetch_latest_album_id():
@@ -186,6 +166,68 @@ def insert_record(catNum, artist_type):
             print("Genre not in Database")
             # TODO add it
 
+
+async def get_release_year(album_title, artist):
+    compilations = [
+        "Pure Gold"
+    ]
+
+    token = "cdAtNuyJOYKXpIWZggHbodcQoqorFbElvGGXKYew"
+    url = f"https://api.discogs.com/database/search?artist={artist.replace(" ", "+")}&format=Vinyl{"+Album" if album_title not in compilations else ""}&release_title={album_title.replace(" ", "+")}&token={token}"
+
+    print("\n--------------------------------------------------------------------------------------")
+    print(f"Fetching Release Year for {album_title} by {artist}...")
+
+    data = await fetch_from_discogs(url)
+    
+    if data and "results" in data:
+        results = data["results"]
+        
+        data_found = False
+        master_urls = []
+
+        for result in results:
+            # Checks that there is a master url
+            if result["master_url"] != "null" and str(album_title).upper() in str(result["title"]).upper():
+                master_url = result["master_url"]
+                
+                # Prevents checking the same master url twice for a given album
+                if master_url in master_urls:
+                    continue
+                
+                print("\nOriginal URL: ", url)
+                print("Master URL: ", master_url)
+                
+                master_urls.append(master_url)
+                master_data = None
+
+                try:
+                    master_data = await fetch_from_discogs(master_url)
+                    
+                    if master_data is not None:
+                        data_found = True
+                        break
+                    else:
+                        print("Data Not Found, Trying Next Master URL...")
+                        await asyncio.sleep(1)  # Add a small delay before trying next URL
+                except Exception as e:
+                    print(f"Error fetching master URL {master_url}: {e}")
+                    await asyncio.sleep(1)  # Add a small delay before trying next URL
+                
+                    
+        if data_found == False:
+            return "Error"
+        
+    try: 
+        year = master_data["year"]
+        print(f"\nRelease Year: {year}")
+        if len(str(year)) <= 4:
+            year = f"'{year}-01-01'"
+        return year
+    except Exception as e:
+        print("\nAn Error Occurred While Attempting to Access API Data: ", e)
+        return "Error"
+
 async def add_existing_albums(file_name):
     file = open(file_name)
     entries: {int, str, str, str, str}
@@ -201,12 +243,12 @@ async def add_existing_albums(file_name):
     cursor.execute(query)
     bands = cursor.fetchall()
 
-    final_insert_query = """
-    INSERT INTO Albums VALUES
-    """
+    final_insert_query = """INSERT INTO Albums VALUES"""
     
     id = 1
     for line in file:
+        #if line.startswith("('Black S") == False:
+        #    continue
         is_artist = True
 
         updated_line = line.strip("('").replace("),", "")
@@ -217,7 +259,7 @@ async def add_existing_albums(file_name):
         release_year = await get_release_year(title.replace('\'\'', '\''), artist)
 
         if release_year == 'Error':
-            print(f"An Error Occurred on {title} by {artist}")
+            print(f"\nAn Error Occurred on {title} by {artist}")
             continue
 
         #print(f"Artist: {artist}")
@@ -246,25 +288,27 @@ async def add_existing_albums(file_name):
             """
             
             cursor.execute(query)
-            artist_id = cursor.fetchall()        
+            artist_id = cursor.fetchone()   
         else:
-            artist_id = get_id_from_name("Band", "BandName", artist)
-
+            artist_id = get_id_from_name("Band", "BandName", artist)[0]
 
         # print(artist_id)
+        print("--------------------------------------------------------------------------------------")
 
         # print(f"{id}: {artist}, {title}, {release_year}, {artist if is_artist else "NULL"}, {artist if is_artist == False else "NULL"}")
-        final_insert_query += f"""
-        ('{title}', '{release_year}', {artist_id if is_artist else "NULL"}, {artist_id if is_artist == False else "NULL"}),
-        """
+        final_insert_query += f"""\n('{title}', {release_year}, {artist_id if is_artist else "NULL"}, {artist_id if is_artist == False else "NULL"}),"""
 
         id += 1
         # entries.update(id, )
     final_insert_query = final_insert_query.removesuffix(",")
     final_insert_query += ";"
+    print("\nFinal Insert Query")
     print(final_insert_query)
 
-file_name = "temp.txt"
+async def add_songs(file_name):
+    file = open(file_name)
+
+file_name = "DataFromOriginalDB/AlbumsAndArtists.txt"
 
 async def main():
     await add_existing_albums(file_name)
