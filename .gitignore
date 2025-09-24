@@ -1,2 +1,3 @@
 .env
 SQL/.vs/*
+Automation/Python/PopulationScript/.venv/*
