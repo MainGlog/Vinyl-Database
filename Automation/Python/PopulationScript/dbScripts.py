@@ -1,11 +1,14 @@
+import asyncio
 import aiohttp
-from os import getenv
+import json
+import requests
+from os import getenv, getcwd
 from dotenv import load_dotenv
 from pyodbc import connect
 from time import sleep
 
 load_dotenv()
-conn = connect(getenv("../SQL_CONNECTION_STRING"))
+conn = connect(getenv("SQL_CONNECTION_STRING"))
 
 class DataModel:
     bands: {int, str, str, str}
@@ -73,16 +76,16 @@ def get_id_from_name(table_name: str, field_name: str, value: str):
     return cursor.fetchone()
 
 
-async def fetch_from_discogs(url: str):
+async def fetch_from_url(url: str, timeout: float, headers = {}):
     async with aiohttp.ClientSession() as session:
         try:
-            async with await session.get(url) as response:
+            async with await session.get(url, headers=headers) as response:
                 if response.status != 200:
                     print(f"Got status code {response.status} from {url}")
-                    await asyncio.sleep(2.5)  # Use asyncio.sleep instead of time.sleep in async functions
+                    await asyncio.sleep(timeout)  # Use asyncio.sleep instead of time.sleep in async functions
                     return None
                 # 2 second request limit
-                await asyncio.sleep(2.5)  
+                await asyncio.sleep(timeout)  
                 return await response.json()
         except aiohttp.ClientError as e:
             print(f"Network error while fetching {url}: {e}")
@@ -94,21 +97,22 @@ def fetch_latest_album_id():
     cursor.execute("""SELECT MAX(AlbumId) FROM Albums""")
     return cursor.fetchall()
 
-def insert_record(catNum: str, artist_type: str):
+async def insert_record(catNum: str, artist_type: str):
     url = "https://api.discogs.com/database/search?catno=" + catNum.replace(" ", "+")
     token = "cdAtNuyJOYKXpIWZggHbodcQoqorFbElvGGXKYew"
     
     url += "&token=" + token
 
     # Will need to find additional parameter(s) to specify the release, as several can show up for a given cat number 
-    record_data = fetch_from_discogs(url)["results"][0]
-    pressing_date = record_data["year"]
-    pressing_country = record_data["country"]
+    record_data = await fetch_from_url(url, 2.5)
+    result = record_data["results"][0]
+    pressing_date = result["year"]
+    pressing_country = result["country"]
     
-    record_label = record_data["label"]
+    record_label = result["label"][0]
 
-    master_url = record_data["master_url"]    
-    album_data = fetch_from_discogs(master_url)
+    master_url = result["master_url"]    
+    album_data = await fetch_from_url(master_url, 2.5)
 
     print(album_data)
 
@@ -147,9 +151,9 @@ def insert_record(catNum: str, artist_type: str):
     """ + "NULL" if artist_type == "Band" else str(artistId) + """);
     """
 
-    cursor = conn.cursor()
-    cursor.execute(query)
-
+    # cursor = conn.cursor()
+    # cursor.execute(query)
+    print(query)
     album_id = fetch_latest_album_id()
 
     query = """
@@ -176,7 +180,7 @@ async def fetch_master_data(album_title, artist):
 
     print("\n--------------------------------------------------------------------------------------")
 
-    data = await fetch_from_discogs(url)
+    data = await fetch_from_url(url, 2.5)
     
     if data and "results" in data:
         results = data["results"]
@@ -200,7 +204,7 @@ async def fetch_master_data(album_title, artist):
                 master_data = None
 
                 try:
-                    master_data = await fetch_from_discogs(master_url)
+                    master_data = await fetch_from_url(master_url, 2.5)
                     
                     if master_data is not None:
                         data_found = True
@@ -216,7 +220,7 @@ async def fetch_master_data(album_title, artist):
         if data_found == False:
             return "Error"
         else:
-            return await fetch_from_discogs(master_data["main_release_url"])      
+            return await fetch_from_url(master_data["main_release_url"], 2.5)      
 
 async def get_release_year(album_title, artist):
     master_data = await fetch_master_data(album_title, artist)
@@ -382,10 +386,12 @@ async def get_artist_id_from_name(artist_name):
 
 # Adds an artist to the DB based on a Discogs URL, then returns the ID of the artist added
 async def add_artist(url) -> int:
-    artist = fetch_from_discogs(url)
+    artist = await fetch_from_url(url, 2.5)
     
     name = artist["name"].split(" ")
     first = name[0]
+    middle = ""
+    last = ""
     match len(name):
         case 2:
             last = name[1]
@@ -397,6 +403,53 @@ async def add_artist(url) -> int:
     
     # TODO figure out how to split up the profile at the date. I'm thinking Regular Expressions
     birth_date = artist["profile"]
+    
+    wiki_url = "https://api.wikimedia.org/core/v1/wikipedia/en/search/page/"
+    search_query = f"{first}{f" {middle}" if len(middle) > 0 else ""}{f" {last}" if len(last) > 0 else ""}"
+    parameters = {'q': search_query, 'limit': 1}
+
+    with open("Python/PopulationScript/Wikipedia.json") as file:
+        credentials = json.load(file)
+    access_token = credentials["Token"]
+
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'User-Agent': 'Vinyl DB'
+    }
+
+    print(wiki_url)
+    print(search_query)
+    print(headers)
+    async with aiohttp.ClientSession() as session:
+            try:
+                async with await session.get(wiki_url, headers=headers, params=parameters) as response:
+                    if response.status != 200:
+                        print(f"Got status code {response.status} from {wiki_url}")
+                        await asyncio.sleep(3)  # Use asyncio.sleep instead of time.sleep in async functions
+                        return None
+                    # 2 second request limit
+                    await asyncio.sleep(3)  
+                    return await response.json()
+            except aiohttp.ClientError as e:
+                print(f"Network error while fetching {wiki_url}: {e}")
+                return None
+
+    print(response)
+    return
+
+    for url in urls:
+        if "wikipedia" in url:
+            wiki_url = url.replace("//en.", "//api.")
+            
+
+            #results = await fetch_from_url(wiki_url, 3, headers)
+            #response = requests.get(wiki_url, headers=headers)
+            #print(response)
+            break
+            
+
+
+
 
     try: 
         real_name = artist["realname"].split(" ")
@@ -418,21 +471,18 @@ async def add_artist(url) -> int:
     SELECT MAX(ArtistID)
     FROM Artists;
     """
-    cursor = conn.cursor()
-    cursor.execute(query)
+    #cursor = conn.cursor()
+    #cursor.execute(query)
 
     # TODO add memberships
  
-    artist_id = cursor.fetchall()[0] 
-    return artist_id
+    #artist_id = cursor.fetchall()[0] 
+    #return artist_id
 
     
-
-
 async def main():
-    await add_existing_albums(file_name)
+    #await insert_record("BS 2695", "Band")
+    await add_artist("https://api.discogs.com/artists/273817")
+#    await add_existing_albums(file_name)
 
-import asyncio
 asyncio.run(main())
-
-# insert_record("BS 2695", "Band")
